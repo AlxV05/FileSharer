@@ -8,18 +8,18 @@ import java.util.Objects;
 public class ServerClient {
     protected Socket clientSocket;
     private BufferedReader in;
-    private Writer out;
+    private PrintWriter out;
     String temporaryIPAddress = "127.0.0.1";
     int temporaryPort = 1234;
 
     public void startConnection(String ip, int port) throws IOException {
         this.clientSocket = new Socket(ip, port);
-        this.out = new PrintWriter(clientSocket.getOutputStream(), true);
         this.in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        this.out = new PrintWriter(clientSocket.getOutputStream(), true);
     }
 
-    public String sendCommand(String cmd) {
-        return this.handleCmd(cmd);
+    public String sendCommand(String line) {
+        return this.handleLine(line) + "\n";
     }
 
     public void killConnection() {
@@ -32,7 +32,9 @@ public class ServerClient {
         }
     }
 
-    private String handleCmd(String cmd) {
+    private String handleLine(String line) {
+        String[] splitLine = line.split(" ");
+        String cmd = splitLine[0];
         if (this.clientSocket == null || this.clientSocket.isClosed()) {
             if (Objects.equals(cmd, "connect")) {
                 try {
@@ -64,12 +66,14 @@ public class ServerClient {
                             return "Already connected";
                         }
                     }
-                    case "list" -> {
-                        this.out.write(cmd);
-                        return this.in.readLine();
-                    }
                     case "read" -> {
-                        return null;
+                        try {
+                            String arg = splitLine[1];
+                            this.out.println(String.format("%s %s", cmd, arg));
+                            return this.in.readLine();
+                        } catch (IndexOutOfBoundsException e) {
+                            return "No file specified to read";
+                        }
                     }
                     case "push" -> {
                         return null;
@@ -77,8 +81,12 @@ public class ServerClient {
                     case "pull" -> {
                         return null;
                     }
+                    case "help" -> {
+                        return null;
+                    }
                     default -> {
-                        return String.format("Unknown command: %s", cmd);
+                        this.out.println(cmd);
+                        return this.in.readLine();
                     }
                 }
             } catch (Exception e) {

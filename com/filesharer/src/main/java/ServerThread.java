@@ -3,7 +3,6 @@ package main.java;
 import java.io.*;
 import java.net.Socket;
 import java.util.Objects;
-import java.util.function.DoubleToIntFunction;
 
 public class ServerThread extends Thread{
     protected ServerDataHandler dataHandler;
@@ -16,21 +15,20 @@ public class ServerThread extends Thread{
 
     public void run() {
         BufferedReader in;
-        PrintStream out;
+        PrintWriter out;
         try {
             in = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
-            out = new PrintStream(this.socket.getOutputStream());
+            out = new PrintWriter(this.socket.getOutputStream(), true);
         } catch (IOException e) {
             e.printStackTrace();
             return;
         }
         while (!this.socket.isClosed()) {
             try {
-//                out.println(this.handleLine(in.readLine()));
-                out.println(in.readLine()); // Issue here
+                out.println(this.handleLine(in.readLine()));
             } catch (Exception e) {
                 e.printStackTrace();
-                return;
+                break;
             }
         }
         try {
@@ -42,7 +40,7 @@ public class ServerThread extends Thread{
     }
 
     private String handleLine(String line) {
-        if (Objects.equals(line, null)) {
+        if (Objects.equals(line, null) || line.isBlank()) {
             return "";
         } else {
             String[] splitLine = line.split(" ");
@@ -58,11 +56,11 @@ public class ServerThread extends Thread{
                 return null;
             }
             case "list" -> {
-//                return this.dataHandler.listFiles();
-                return "Yes";
+                return this.dataHandler.listFiles();
             }
             case "read" -> {
-                return null;
+                String arg = splitLine[1];
+                return this.dataHandler.readFile(arg);
             }
             case "push" -> {
                 return null;
@@ -71,7 +69,7 @@ public class ServerThread extends Thread{
                 return null;
             }
             default -> {
-                return String.format("Unknown command {%s} should not have reached here", cmd);
+                return String.format("Unknown command: \"%s\"", cmd);
             }
         }
     }

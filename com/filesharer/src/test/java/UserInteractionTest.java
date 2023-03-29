@@ -10,8 +10,11 @@ public class UserInteractionTest {
     public static void main(String[] args) throws IOException {
         ServerClient client = new ServerClient();
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+        System.out.println("Started client");
+        System.out.print("> ");
         while (true) {
-            System.out.println(client.sendCommand(in.readLine()));
+            System.out.printf(client.sendCommand(in.readLine()));
+            System.out.print("> ");
         }
     }
 }

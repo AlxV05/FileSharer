@@ -11,12 +11,15 @@ public class ServerDataHandler {
     }
 
     public String listFiles() {
-//        return String.join("\n", this.files.keySet());
-        return "Listed";
+        return String.join("%n", this.files.keySet());
     }
 
     public synchronized String readFile(String fileName) {
-        return String.join("\n", this.files.get(fileName).fileData());
+        if (this.files.containsKey(fileName)) {
+            return String.join("%n", this.files.get(fileName).fileData());
+        } else {
+            return String.format("File \"%s\" not found", fileName);
+        }
     }
 
     public synchronized void addFile(FileDataObject fileDataObject) {
