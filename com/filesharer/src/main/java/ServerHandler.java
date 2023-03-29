@@ -4,7 +4,11 @@ import java.io.IOException;
 import java.net.ServerSocket;
 
 public class ServerHandler {
+    public ServerHandler() {
+        this.dataHandler = new ServerDataHandler();
+    }
     protected ServerSocket serverSocket;
+    protected ServerDataHandler dataHandler;
 
     public void start(int port) {
         try {
@@ -14,7 +18,7 @@ public class ServerHandler {
         }
         while (!this.serverSocket.isClosed()) {
             try {
-                new ServerThread(this.serverSocket.accept()).start();
+                new ServerThread(this.dataHandler, this.serverSocket.accept()).start();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -28,6 +32,7 @@ public class ServerHandler {
     public static void main(String[] args) {
         int temporaryPort = 1234;
         ServerHandler server = new ServerHandler();
+        System.out.println("Starting server");
         server.start(temporaryPort);
     }
 }

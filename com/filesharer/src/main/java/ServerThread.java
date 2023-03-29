@@ -3,12 +3,15 @@ package main.java;
 import java.io.*;
 import java.net.Socket;
 import java.util.Objects;
+import java.util.function.DoubleToIntFunction;
 
 public class ServerThread extends Thread{
+    protected ServerDataHandler dataHandler;
     protected Socket socket;
 
-    public ServerThread(Socket socket) {
+    public ServerThread(ServerDataHandler dataHandler, Socket socket) {
         this.socket = socket;
+        this.dataHandler = dataHandler;
     }
 
     public void run() {
@@ -17,13 +20,14 @@ public class ServerThread extends Thread{
         try {
             in = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
             out = new PrintStream(this.socket.getOutputStream());
-        } catch (Exception e) {
+        } catch (IOException e) {
             e.printStackTrace();
             return;
         }
         while (!this.socket.isClosed()) {
             try {
-                out.println(handleLine(in.readLine()));
+//                out.println(this.handleLine(in.readLine()));
+                out.println(in.readLine()); // Issue here
             } catch (Exception e) {
                 e.printStackTrace();
                 return;
@@ -32,7 +36,7 @@ public class ServerThread extends Thread{
         try {
             in.close();
             out.close();
-        } catch (Exception e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -47,23 +51,36 @@ public class ServerThread extends Thread{
     }
 
     private String parseLine(String[] splitLine) {
-        String command = splitLine[0];
-        switch (command) {
+        String cmd = splitLine[0];
+        switch (cmd) {
             case "kill" -> {
-                try {
-                    this.socket.close();
-                    return "Connection killed";
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return "Failed to kill the connection";
-                }
+                this.killConnection();
+                return null;
             }
-            case "connect" -> {
-                return "Already connected";
+            case "list" -> {
+//                return this.dataHandler.listFiles();
+                return "Yes";
+            }
+            case "read" -> {
+                return null;
+            }
+            case "push" -> {
+                return null;
+            }
+            case "pull" -> {
+                return null;
             }
             default -> {
-                return String.format("Unknown command: %s", command);
+                return String.format("Unknown command {%s} should not have reached here", cmd);
             }
+        }
+    }
+
+    public void killConnection() {
+        try {
+            this.socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }
