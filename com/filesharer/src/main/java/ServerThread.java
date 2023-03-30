@@ -1,6 +1,9 @@
 package main.java;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Objects;
 
@@ -63,10 +66,18 @@ public class ServerThread extends Thread{
                 return this.dataHandler.readFile(arg);
             }
             case "push" -> {
-                return null;
+                String argName = splitLine[1];
+                String argInfo = splitLine[2];
+                this.dataHandler.addFile(new FileDataObject(argName, argInfo));
+                return String.format("Added file \"%s\" to database", argName);
             }
             case "pull" -> {
                 return null;
+            }
+            case "remove" -> {
+                String argName = splitLine[1];
+                this.dataHandler.removeFile(argName);
+                return String.format("Removed file \"%s\"", argName);
             }
             default -> {
                 return String.format("Unknown command: \"%s\"", cmd);

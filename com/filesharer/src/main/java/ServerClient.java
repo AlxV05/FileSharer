@@ -3,14 +3,20 @@ package main.java;
 import java.io.*;
 import java.net.ConnectException;
 import java.net.Socket;
+import java.nio.file.NoSuchFileException;
 import java.util.Objects;
 
 public class ServerClient {
     protected Socket clientSocket;
+    private final FileDataReader fileReader;
     private BufferedReader in;
     private PrintWriter out;
     String temporaryIPAddress = "127.0.0.1";
     int temporaryPort = 1234;
+
+    public ServerClient() {
+        this.fileReader = new FileDataReader();
+    }
 
     public void startConnection(String ip, int port) throws IOException {
         this.clientSocket = new Socket(ip, port);
@@ -68,18 +74,37 @@ public class ServerClient {
                     }
                     case "read" -> {
                         try {
-                            String arg = splitLine[1];
-                            this.out.println(String.format("%s %s", cmd, arg));
+                            String argName = splitLine[1];
+                            this.out.println(String.format("%s %s", cmd, argName));
                             return this.in.readLine();
                         } catch (IndexOutOfBoundsException e) {
                             return "No file specified to read";
                         }
                     }
                     case "push" -> {
-                        return null;
+                        try {
+                            String argName = splitLine[1];
+                            String argPath = splitLine[2];
+                            String fileData = this.fileReader.getFileData(new File(argPath));
+                            this.out.println(String.format("%s %s %s", cmd, argName, fileData));
+                            return this.in.readLine();
+                        } catch (NoSuchFileException e) {
+                            return String.format("No file with path %s found", splitLine[2]);
+                        } catch (IndexOutOfBoundsException e) {
+                            return "Argument requirements not met";
+                        }
                     }
                     case "pull" -> {
                         return null;
+                    }
+                    case "remove" -> {
+                        try {
+                            String argName = splitLine[1];
+                            this.out.println(String.format("%s %s", cmd, argName));
+                            return this.in.readLine();
+                        } catch (IndexOutOfBoundsException e) {
+                            return "No file specified to remove";
+                        }
                     }
                     case "help" -> {
                         return null;
@@ -90,7 +115,8 @@ public class ServerClient {
                     }
                 }
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                e.printStackTrace();
+                return null;
             }
         }
     }

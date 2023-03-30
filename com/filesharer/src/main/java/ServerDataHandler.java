@@ -16,7 +16,7 @@ public class ServerDataHandler {
 
     public synchronized String readFile(String fileName) {
         if (this.files.containsKey(fileName)) {
-            return String.join("%n", this.files.get(fileName).fileData());
+            return this.files.get(fileName).fileData();
         } else {
             return String.format("File \"%s\" not found", fileName);
         }
