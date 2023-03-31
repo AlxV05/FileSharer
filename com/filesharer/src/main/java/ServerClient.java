@@ -9,8 +9,8 @@ import java.util.Objects;
 public class ServerClient {
     protected Socket clientSocket;
     private final FileDataReader fileReader;
-    private BufferedReader in;
-    private PrintWriter out;
+    private BufferedReader serverInputReader;
+    private PrintWriter serverOutputWriter;
     String temporaryIPAddress = "127.0.0.1";
     int temporaryPort = 1234;
 
@@ -19,20 +19,20 @@ public class ServerClient {
     }
 
     public void startConnection(String ip, int port) throws IOException {
-        this.clientSocket = new Socket(ip, port);
-        this.in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-        this.out = new PrintWriter(clientSocket.getOutputStream(), true);
+        clientSocket = new Socket(ip, port);
+        serverInputReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        serverOutputWriter = new PrintWriter(clientSocket.getOutputStream(), true);
     }
 
     public String sendCommand(String line) {
-        return this.handleLine(line) + "\n";
+        return handleLine(line) + "\n";
     }
 
     public void killConnection() {
         try {
-            this.out.close();
-            this.in.close();
-            this.clientSocket.close();
+            serverOutputWriter.close();
+            serverInputReader.close();
+            clientSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -41,10 +41,10 @@ public class ServerClient {
     private String handleLine(String line) {
         String[] splitLine = line.split(" ");
         String cmd = splitLine[0];
-        if (this.clientSocket == null || this.clientSocket.isClosed()) {
+        if (clientSocket == null || clientSocket.isClosed()) {
             if (Objects.equals(cmd, "connect")) {
                 try {
-                    this.startConnection(temporaryIPAddress, temporaryPort);
+                    startConnection(temporaryIPAddress, temporaryPort);
                     return "Connected";
                 } catch (IOException e) {
                     return "Failed to connect";
@@ -56,14 +56,14 @@ public class ServerClient {
             try {
                 switch (cmd) {
                     case "kill" -> {
-                        this.out.write(cmd);
-                        this.killConnection();
+                        serverOutputWriter.write(cmd);
+                        killConnection();
                         return "Connection killed";
                     }
                     case "connect" -> {
-                        if (this.clientSocket == null || this.clientSocket.isClosed()) {
+                        if (clientSocket == null || clientSocket.isClosed()) {
                             try {
-                                this.startConnection(temporaryIPAddress, temporaryPort);
+                                startConnection(temporaryIPAddress, temporaryPort);
                                 return "Connected";
                             } catch (ConnectException e) {
                                 return "Failed to connect";
@@ -75,8 +75,8 @@ public class ServerClient {
                     case "read" -> {
                         try {
                             String argName = splitLine[1];
-                            this.out.println(String.format("%s %s", cmd, argName));
-                            return this.in.readLine();
+                            serverOutputWriter.println(String.format("%s %s", cmd, argName));
+                            return serverInputReader.readLine();
                         } catch (IndexOutOfBoundsException e) {
                             return "No file specified to read";
                         }
@@ -85,9 +85,9 @@ public class ServerClient {
                         try {
                             String argName = splitLine[1];
                             String argPath = splitLine[2];
-                            String fileData = this.fileReader.getFileData(new File(argPath));
-                            this.out.println(String.format("%s %s %s", cmd, argName, fileData));
-                            return this.in.readLine();
+                            String fileData = fileReader.getFileData(new File(argPath));
+                            serverOutputWriter.println(String.format("%s %s ", cmd, argName) + fileData);
+                            return serverInputReader.readLine();
                         } catch (NoSuchFileException e) {
                             return String.format("No file with path %s found", splitLine[2]);
                         } catch (IndexOutOfBoundsException e) {
@@ -100,8 +100,8 @@ public class ServerClient {
                     case "remove" -> {
                         try {
                             String argName = splitLine[1];
-                            this.out.println(String.format("%s %s", cmd, argName));
-                            return this.in.readLine();
+                            serverOutputWriter.println(String.format("%s %s", cmd, argName));
+                            return serverInputReader.readLine();
                         } catch (IndexOutOfBoundsException e) {
                             return "No file specified to remove";
                         }
@@ -110,8 +110,8 @@ public class ServerClient {
                         return null;
                     }
                     default -> {
-                        this.out.println(cmd);
-                        return this.in.readLine();
+                        serverOutputWriter.println(cmd);
+                        return serverInputReader.readLine();
                     }
                 }
             } catch (Exception e) {

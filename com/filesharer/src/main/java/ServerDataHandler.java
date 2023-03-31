@@ -11,22 +11,22 @@ public class ServerDataHandler {
     }
 
     public String listFiles() {
-        return String.join("%n", this.files.keySet());
+        return String.join("%n", files.keySet());
     }
 
     public synchronized String readFile(String fileName) {
-        if (this.files.containsKey(fileName)) {
-            return this.files.get(fileName).fileData();
+        if (files.containsKey(fileName)) {
+            return files.get(fileName).fileData();
         } else {
             return String.format("File \"%s\" not found", fileName);
         }
     }
 
     public synchronized void addFile(FileDataObject fileDataObject) {
-        this.files.put(fileDataObject.fileName(), fileDataObject);
+        files.put(fileDataObject.fileName(), fileDataObject);
     }
 
     public synchronized void removeFile(String fileName) {
-        this.files.remove(fileName);
+        files.remove(fileName);
     }
 }

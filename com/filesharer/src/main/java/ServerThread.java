@@ -9,34 +9,34 @@ import java.util.Objects;
 
 public class ServerThread extends Thread{
     protected ServerDataHandler dataHandler;
-    protected Socket socket;
+    protected Socket clientSocket;
 
-    public ServerThread(ServerDataHandler dataHandler, Socket socket) {
-        this.socket = socket;
+    public ServerThread(ServerDataHandler dataHandler, Socket clientSocket) {
+        this.clientSocket = clientSocket;
         this.dataHandler = dataHandler;
     }
 
     public void run() {
-        BufferedReader in;
-        PrintWriter out;
+        BufferedReader clientInputReader;
+        PrintWriter clientOutputWriter;
         try {
-            in = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
-            out = new PrintWriter(this.socket.getOutputStream(), true);
+            clientInputReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            clientOutputWriter = new PrintWriter(clientSocket.getOutputStream(), true);
         } catch (IOException e) {
             e.printStackTrace();
             return;
         }
-        while (!this.socket.isClosed()) {
+        while (!clientSocket.isClosed()) {
             try {
-                out.println(this.handleLine(in.readLine()));
+                clientOutputWriter.println(handleLine(clientInputReader.readLine()));
             } catch (Exception e) {
                 e.printStackTrace();
                 break;
             }
         }
         try {
-            in.close();
-            out.close();
+            clientInputReader.close();
+            clientOutputWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -46,7 +46,7 @@ public class ServerThread extends Thread{
         if (Objects.equals(line, null) || line.isBlank()) {
             return "";
         } else {
-            String[] splitLine = line.split(" ");
+            String[] splitLine = line.split(" ", 3);
             return parseLine(splitLine);
         }
     }
@@ -55,20 +55,20 @@ public class ServerThread extends Thread{
         String cmd = splitLine[0];
         switch (cmd) {
             case "kill" -> {
-                this.killConnection();
+                killConnection();
                 return null;
             }
             case "list" -> {
-                return this.dataHandler.listFiles();
+                return dataHandler.listFiles();
             }
             case "read" -> {
                 String arg = splitLine[1];
-                return this.dataHandler.readFile(arg);
+                return dataHandler.readFile(arg);
             }
             case "push" -> {
                 String argName = splitLine[1];
                 String argInfo = splitLine[2];
-                this.dataHandler.addFile(new FileDataObject(argName, argInfo));
+                dataHandler.addFile(new FileDataObject(argName, argInfo));
                 return String.format("Added file \"%s\" to database", argName);
             }
             case "pull" -> {
@@ -76,7 +76,7 @@ public class ServerThread extends Thread{
             }
             case "remove" -> {
                 String argName = splitLine[1];
-                this.dataHandler.removeFile(argName);
+                dataHandler.removeFile(argName);
                 return String.format("Removed file \"%s\"", argName);
             }
             default -> {
@@ -87,7 +87,7 @@ public class ServerThread extends Thread{
 
     public void killConnection() {
         try {
-            this.socket.close();
+            clientSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
