@@ -23,7 +23,7 @@ public class ServerDataHandler {
     }
 
     public synchronized void addFile(FileDataObject fileDataObject) {
-        files.put(fileDataObject.fileName(), fileDataObject);
+        files.put(fileDataObject.fileTag(), fileDataObject);
     }
 
     public synchronized void removeFile(String fileName) {

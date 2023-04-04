@@ -65,19 +65,19 @@ public class ServerThread extends Thread{
                 return dataHandler.listFiles();
             }
             case "read", "pull" -> {
-                String arg = splitLine[1];
-                return dataHandler.readFile(arg);
+                String argTag = splitLine[1];
+                return dataHandler.readFile(argTag);
             }
             case "push" -> {
-                String argName = splitLine[1];
+                String argTag = splitLine[1];
                 String argInfo = splitLine[2];
-                dataHandler.addFile(new FileDataObject(argName, argInfo));
-                return String.format("Added file with tag \"%s\" to database", argName);
+                dataHandler.addFile(new FileDataObject(argTag, argInfo));
+                return String.format("Added file with tag \"%s\" to database", argTag);
             }
             case "remove" -> {
-                String argName = splitLine[1];
-                dataHandler.removeFile(argName);
-                return String.format("Removed file with tag \"%s\"", argName);
+                String argTag = splitLine[1];
+                dataHandler.removeFile(argTag);
+                return String.format("Removed file with tag \"%s\"", argTag);
             }
             default -> {
                 return String.format("Unknown command: \"%s\"", cmd);

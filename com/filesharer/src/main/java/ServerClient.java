@@ -64,8 +64,8 @@ public class ServerClient {
                     }
                     case "read" -> {
                         try {
-                            String argName = splitLine[1];
-                            serverOutputWriter.println(String.format("%s %s", cmd, argName));
+                            String argTag = splitLine[1];
+                            serverOutputWriter.println(String.format("%s %s", cmd, argTag));
                             return serverInputReader.readLine();
                         } catch (IndexOutOfBoundsException e) {
                             return "No file specified to read";
@@ -73,10 +73,10 @@ public class ServerClient {
                     }
                     case "push" -> {
                         try {
-                            String argName = splitLine[1];
+                            String argTag = splitLine[1];
                             String argPath = splitLine[2];
                             String fileData = String.join("%n", Files.readAllLines(new File(argPath).toPath()));
-                            serverOutputWriter.print(String.format("%s %s ", cmd, argName));
+                            serverOutputWriter.print(String.format("%s %s ", cmd, argTag));
                             serverOutputWriter.println(fileData);
                             return serverInputReader.readLine();
                         } catch (NoSuchFileException e) {
@@ -87,9 +87,9 @@ public class ServerClient {
                     }
                     case "pull" -> {
                         try {
-                            String argName = splitLine[1];
+                            String argTag = splitLine[1];
                             String argPath = splitLine[2];
-                            serverOutputWriter.println(String.format("%s %s", cmd, argName));
+                            serverOutputWriter.println(String.format("%s %s", cmd, argTag));
                             String fileData = serverInputReader.readLine();
                             File file = new File(argPath);
                             if (!file.createNewFile()) {
@@ -98,7 +98,7 @@ public class ServerClient {
                             FileWriter clientFileWriter = new FileWriter(file);
                             clientFileWriter.write(String.format(fileData + "%n"));
                             clientFileWriter.close();
-                            return String.format("Successfully pulled file \"%s\" from server to \"%s\"", argName, argPath);
+                            return String.format("Successfully pulled file \"%s\" from server to \"%s\"", argTag, argPath);
                         } catch (IOException e) {
                             return "Failed to write file";
                         } catch (IndexOutOfBoundsException e) {
@@ -107,8 +107,8 @@ public class ServerClient {
                     }
                     case "remove" -> {
                         try {
-                            String argName = splitLine[1];
-                            serverOutputWriter.println(String.format("%s %s", cmd, argName));
+                            String argTag = splitLine[1];
+                            serverOutputWriter.println(String.format("%s %s", cmd, argTag));
                             return serverInputReader.readLine();
                         } catch (IndexOutOfBoundsException e) {
                             return "No file specified to remove";

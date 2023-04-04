@@ -1,4 +1,4 @@
 package main.java;
 
-public record FileDataObject(String fileName, String fileData) {
+public record FileDataObject(String fileTag, String fileData) {
 }
