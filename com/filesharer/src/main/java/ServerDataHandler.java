@@ -14,11 +14,11 @@ public class ServerDataHandler {
         return String.join("%n", files.keySet());
     }
 
-    public synchronized String readFile(String fileName) {
-        if (files.containsKey(fileName)) {
-            return files.get(fileName).fileData();
+    public synchronized String readFile(String fileTag) {
+        if (files.containsKey(fileTag)) {
+            return files.get(fileTag).fileData();
         } else {
-            return String.format("File \"%s\" not found", fileName);
+            return String.format("File with tag \"%s\" not found", fileTag);
         }
     }
 

@@ -1,19 +1,19 @@
 package main.java;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Objects;
 
 public class ServerThread extends Thread{
     protected ServerDataHandler dataHandler;
     protected Socket clientSocket;
+    protected ServerSocket serverSocket;
 
-    public ServerThread(ServerDataHandler dataHandler, Socket clientSocket) {
+    public ServerThread(ServerSocket serverSocket, ServerDataHandler dataHandler, Socket clientSocket) {
         this.clientSocket = clientSocket;
         this.dataHandler = dataHandler;
+        this.serverSocket = serverSocket;
     }
 
     public void run() {
@@ -58,10 +58,13 @@ public class ServerThread extends Thread{
                 killConnection();
                 return null;
             }
+            case "connect" -> {
+                return "Already connected";
+            }
             case "list" -> {
                 return dataHandler.listFiles();
             }
-            case "read" -> {
+            case "read", "pull" -> {
                 String arg = splitLine[1];
                 return dataHandler.readFile(arg);
             }
@@ -69,15 +72,12 @@ public class ServerThread extends Thread{
                 String argName = splitLine[1];
                 String argInfo = splitLine[2];
                 dataHandler.addFile(new FileDataObject(argName, argInfo));
-                return String.format("Added file \"%s\" to database", argName);
-            }
-            case "pull" -> {
-                return null;
+                return String.format("Added file with tag \"%s\" to database", argName);
             }
             case "remove" -> {
                 String argName = splitLine[1];
                 dataHandler.removeFile(argName);
-                return String.format("Removed file \"%s\"", argName);
+                return String.format("Removed file with tag \"%s\"", argName);
             }
             default -> {
                 return String.format("Unknown command: \"%s\"", cmd);
