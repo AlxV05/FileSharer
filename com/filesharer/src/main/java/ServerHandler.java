@@ -7,6 +7,7 @@ import java.net.ServerSocket;
 import java.util.Objects;
 
 import static main.java.Messages.CLIOutput.*;
+import static main.java.Messages.CLIInput.*;
 
 public class ServerHandler {
     protected ServerSocket serverSocket;
@@ -87,8 +88,8 @@ public class ServerHandler {
                 System.out.print(prompt);
                 try {
                     String line = reader.readLine();
-                    if (Objects.equals(line, "exit") || Objects.equals(line, "kill")) {
-                        sendCommand("kill");
+                    if (Objects.equals(line, Commands.exitClient) || Objects.equals(line, Commands.killConnection)) {
+                        sendCommand(Commands.killConnection);
                         killConnection();
                         break;
                     } else {

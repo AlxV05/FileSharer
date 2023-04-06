@@ -5,6 +5,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Objects;
 
+import static main.java.Messages.CLIInput.*;
+import static main.java.Messages.CLIOutput.*;
+
 public class ServerThread extends Thread{
     protected ServerDataHandler dataHandler;
     protected Socket clientSocket;
@@ -16,6 +19,7 @@ public class ServerThread extends Thread{
         this.serverSocket = serverSocket;
     }
 
+    @Override
     public void run() {
         BufferedReader clientInputReader;
         PrintWriter clientOutputWriter;
@@ -43,8 +47,9 @@ public class ServerThread extends Thread{
     }
 
     private String handleLine(String line) {
+
         if (Objects.equals(line, null) || line.isBlank()) {
-            return "";
+            return blank;
         } else {
             String[] splitLine = line.split(" ", 3);
             return parseLine(splitLine);
@@ -54,38 +59,38 @@ public class ServerThread extends Thread{
     private String parseLine(String[] splitLine) {
         String cmd = splitLine[0];
         switch (cmd) {
-            case "kill" -> {
+            case Commands.killConnection -> {
                 killConnection();
-                return null;
+                return Successes.connectionKillSuccess;
             }
-            case "connect" -> {
-                return "Already connected";
+            case Commands.startConnection -> {
+                return Statuses.alreadyConnected;
             }
-            case "list" -> {
+            case Commands.listFiles -> {
                 return dataHandler.listFiles();
             }
-            case "read", "pull" -> {
+            case Commands.readFile, Commands.pullFile -> {
                 String argTag = splitLine[1];
                 return dataHandler.readFile(argTag);
             }
-            case "push" -> {
+            case Commands.pushFile -> {
                 String argTag = splitLine[1];
                 String argInfo = splitLine[2];
                 dataHandler.addFile(new FileDataObject(argTag, argInfo));
-                return String.format("Added file with tag \"%s\" to database", argTag);
+                return String.format(Successes.addedFileSuccessfully, argTag);
             }
-            case "remove" -> {
+            case Commands.removeFile -> {
                 String argTag = splitLine[1];
                 dataHandler.removeFile(argTag);
-                return String.format("Removed file with tag \"%s\"", argTag);
+                return String.format(Successes.removedFileSuccessfully, argTag);
             }
             default -> {
-                return String.format("Unknown command: \"%s\"", cmd);
+                return String.format(Failures.unknownCommand, cmd);
             }
         }
     }
 
-    public void killConnection() {
+    private void killConnection() {
         try {
             clientSocket.close();
         } catch (IOException e) {

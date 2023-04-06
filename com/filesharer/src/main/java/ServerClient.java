@@ -7,16 +7,12 @@ import java.nio.file.NoSuchFileException;
 import java.util.Objects;
 
 import static main.java.Messages.CLIOutput.*;
+import static main.java.Messages.CLIInput.*;
 
 public class ServerClient {
     protected Socket clientSocket;
     private BufferedReader serverInputReader;
     private PrintWriter serverOutputWriter;
-    String temporaryIPAddress = "127.0.0.1";
-    int temporaryPort = 1234;
-
-    public ServerClient() {
-    }
 
     public void startConnection(String ip, int port) throws IOException {
         clientSocket = new Socket(ip, port);
@@ -36,7 +32,7 @@ public class ServerClient {
     }
 
     public String sendCommand(String line) {
-        return handleLine(line) + "\n";
+        return handleLine(line) + newLine;
     }
 
 
@@ -44,9 +40,9 @@ public class ServerClient {
         String[] splitLine = line.split(" ");
         String cmd = splitLine[0];
         if (clientSocket == null || clientSocket.isClosed()) {
-            if (Objects.equals(cmd, "connect")) {
+            if (Objects.equals(cmd, Commands.startConnection)) {
                 try {
-                    startConnection(temporaryIPAddress, temporaryPort);
+                    startConnection("127.0.01", 1234);
                     return Successes.connectionSuccess;
                 } catch (IOException e) {
                     return Failures.connectionFailure;
@@ -57,64 +53,67 @@ public class ServerClient {
         } else {
             try {
                 switch (cmd) {
-                    case "kill" -> {
+                    case Commands.killConnection -> {
                         serverOutputWriter.write(cmd);
                         killConnection();
                         return Successes.connectionKillSuccess;
                     }
-                    case "read" -> {
+                    case Commands.readFile -> {
                         try {
                             String argTag = splitLine[1];
-                            serverOutputWriter.println(String.format("%s %s", cmd, argTag));
+                            serverOutputWriter.println(String.format(ArgumentPlaceholders.doubleArgs, cmd, argTag));
                             return serverInputReader.readLine();
                         } catch (IndexOutOfBoundsException e) {
-                            return "No file specified to read";
+                            return Failures.unspecifiedFileToRead;
                         }
                     }
-                    case "push" -> {
+                    case Commands.pushFile -> {
                         try {
                             String argTag = splitLine[1];
                             String argPath = splitLine[2];
-                            String fileData = String.join("%n", Files.readAllLines(new File(argPath).toPath()));
-                            serverOutputWriter.print(String.format("%s %s ", cmd, argTag));
-                            serverOutputWriter.println(fileData);
+                            String fileData = String.join(newLine, Files.readAllLines(new File(argPath).toPath()));
+                            serverOutputWriter.println(String.format(ArgumentPlaceholders.tripleArgs, cmd, argTag, fileData));
                             return serverInputReader.readLine();
                         } catch (NoSuchFileException e) {
-                            return String.format("No file with path \"%s\" found", splitLine[2]);
+                            return String.format(Failures.noFileAtPath, splitLine[2]);
                         } catch (IndexOutOfBoundsException e) {
-                            return "Argument requirements not met";
+                            return Failures.argumentRequirementFailure;
                         }
                     }
-                    case "pull" -> {
+                    case Commands.pullFile -> {
                         try {
                             String argTag = splitLine[1];
                             String argPath = splitLine[2];
-                            serverOutputWriter.println(String.format("%s %s", cmd, argTag));
+                            serverOutputWriter.println(String.format(ArgumentPlaceholders.doubleArgs, cmd, argTag));
                             String fileData = serverInputReader.readLine();
                             File file = new File(argPath);
                             if (!file.createNewFile()) {
-                                return "Failed to create file OR file already exists";
+                                if (file.exists()) {
+                                    return String.format(Failures.fileAlreadyExistsAtPath, argPath);
+                                } else {
+                                    return String.format(Failures.failedToCreateNewFileAtPath, argPath);
+                                }
                             }
                             FileWriter clientFileWriter = new FileWriter(file);
-                            clientFileWriter.write(String.format(fileData + "%n"));
+                            clientFileWriter.write(String.format(fileData + newLine));
                             clientFileWriter.close();
-                            return String.format("Successfully pulled file \"%s\" from server to \"%s\"", argTag, argPath);
+                            return String.format(Successes.pulledFileSuccessfully, argTag, argPath);
                         } catch (IOException e) {
-                            return "Failed to write file";
+                            return Failures.writeToFileFailed;
                         } catch (IndexOutOfBoundsException e) {
-                            return "Argument requirements not met";
+                            return Failures.argumentRequirementFailure;
                         }
                     }
-                    case "remove" -> {
+                    case Commands.removeFile -> {
                         try {
                             String argTag = splitLine[1];
-                            serverOutputWriter.println(String.format("%s %s", cmd, argTag));
+                            serverOutputWriter.println(String.format(ArgumentPlaceholders.doubleArgs, cmd, argTag));
                             return serverInputReader.readLine();
                         } catch (IndexOutOfBoundsException e) {
-                            return "No file specified to remove";
+                            return Failures.unspecifiedFileToRemove;
                         }
                     }
-                    case "help" -> {
+                    case Commands.help -> {
                         return Helps.fullHelp;
                     }
                     default -> {
@@ -136,7 +135,7 @@ public class ServerClient {
             System.out.print(prompt);
             try {
                 String line = reader.readLine();
-                if (Objects.equals(line, "exit")) {
+                if (Objects.equals(line, Commands.exitClient)) {
                     killConnection();
                     break;
                 } else {
@@ -149,10 +148,14 @@ public class ServerClient {
         System.out.println(Statuses.closingClient);
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         ServerClient client = new ServerClient();
         if (args.length > 0) {
-            client.startConnection(args[0], Integer.parseInt(args[1]));
+            try {
+                client.startConnection(args[0], Integer.parseInt(args[1]));
+            } catch (Exception e) {
+                System.out.println(Failures.serverSpecifiedPortError);
+            }
         }
         client.mainLoop();
     }
