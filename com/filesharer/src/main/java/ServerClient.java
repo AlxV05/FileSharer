@@ -32,7 +32,7 @@ public class ServerClient {
     }
 
     public String sendCommand(String line) {
-        return handleLine(line) + newLine;
+        return handleLine(line) + "%n";
     }
 
 
@@ -71,10 +71,17 @@ public class ServerClient {
                         try {
                             String argTag = splitLine[1];
                             String argPath = splitLine[2];
-                            String fileData = String.join(newLine, Files.readAllLines(new File(argPath).toPath()));
-                            serverOutputWriter.println(String.format(ArgumentPlaceholders.tripleArgs, cmd, argTag, fileData));
+                            BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(argPath)));
+                            String fileLine = reader.readLine();
+                            while (fileLine != null) {
+                                serverOutputWriter.println(String.format(ArgumentPlaceholders.tripleArgs, Commands.pushLoop, argTag, fileLine));
+                                fileLine = reader.readLine();
+                                serverInputReader.readLine();
+                            }
+                            reader.close();
+                            serverOutputWriter.println(String.format(ArgumentPlaceholders.doubleArgs, Commands.pushComplete, argTag));
                             return serverInputReader.readLine();
-                        } catch (NoSuchFileException e) {
+                        } catch (NoSuchFileException | FileNotFoundException e) {
                             return String.format(Failures.noFileAtPath, splitLine[2]);
                         } catch (IndexOutOfBoundsException e) {
                             return Failures.argumentRequirementFailure;
@@ -95,7 +102,7 @@ public class ServerClient {
                                 }
                             }
                             FileWriter clientFileWriter = new FileWriter(file);
-                            clientFileWriter.write(String.format(fileData + newLine));
+                            clientFileWriter.write(String.format(fileData + "%n"));
                             clientFileWriter.close();
                             return String.format(Successes.pulledFileSuccessfully, argTag, argPath);
                         } catch (IOException e) {

@@ -1,4 +1,6 @@
 package main.java;
 
-public record FileDataObject(String fileTag, String fileData) {
+import java.util.List;
+
+public record FileDataObject(String fileTag, List<String> fileData) {
 }

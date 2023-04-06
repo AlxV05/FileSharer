@@ -16,7 +16,7 @@ public class ServerDataHandler {
 
     public synchronized String readFile(String fileTag) {
         if (files.containsKey(fileTag)) {
-            return files.get(fileTag).fileData();
+            return String.join("%n", files.get(fileTag).fileData());
         } else {
             return String.format("File with tag \"%s\" not found", fileTag);
         }
@@ -26,7 +26,15 @@ public class ServerDataHandler {
         files.put(fileDataObject.fileTag(), fileDataObject);
     }
 
-    public synchronized void removeFile(String fileName) {
-        files.remove(fileName);
+    public synchronized void appendToFile(String fileTag, String info) {
+        files.get(fileTag).fileData().add(info);
+    }
+
+    public synchronized void removeFile(String fileTag) {
+        files.remove(fileTag);
+    }
+
+    public synchronized boolean containsFile(String fileTag) {
+        return files.getOrDefault(fileTag, null) != null;
     }
 }

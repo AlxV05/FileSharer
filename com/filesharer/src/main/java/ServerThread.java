@@ -3,6 +3,7 @@ package main.java;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.List;
 import java.util.Objects;
 
 import static main.java.Messages.CLIInput.*;
@@ -47,9 +48,8 @@ public class ServerThread extends Thread{
     }
 
     private String handleLine(String line) {
-
         if (Objects.equals(line, null) || line.isBlank()) {
-            return blank;
+            return "";
         } else {
             String[] splitLine = line.split(" ", 3);
             return parseLine(splitLine);
@@ -73,10 +73,18 @@ public class ServerThread extends Thread{
                 String argTag = splitLine[1];
                 return dataHandler.readFile(argTag);
             }
-            case Commands.pushFile -> {
+            case Commands.pushLoop -> {
                 String argTag = splitLine[1];
                 String argInfo = splitLine[2];
-                dataHandler.addFile(new FileDataObject(argTag, argInfo));
+                if (dataHandler.containsFile(argTag)) {
+                    dataHandler.appendToFile(argTag, argInfo);
+                } else {
+                    dataHandler.addFile(new FileDataObject(argTag, List.of(argInfo)));
+                }
+                return null;
+            }
+            case Commands.pushComplete -> {
+                String argTag = splitLine[1];
                 return String.format(Successes.addedFileSuccessfully, argTag);
             }
             case Commands.removeFile -> {

@@ -3,8 +3,6 @@ package main.java;
 public final class Messages {
     public static final class CLIOutput {
         public static final String prompt = "> ";
-        public static final String blank = "";
-        public static final String newLine = "%n";
         public static final class Successes {
             public static final String connectionSuccess = "Connected";
             public static final String clientStartSuccess = "Started Client";
@@ -69,6 +67,8 @@ public final class Messages {
             public static final String listFiles = "list";
             public static final String readFile = "read";
             public static final String pushFile = "push";
+            public static final String pushLoop = "pushL";
+            public static final String pushComplete = "pushC";
             public static final String pullFile = "pull";
             public static final String removeFile = "remove";
             public static final String exitClient = "exit";
