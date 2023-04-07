@@ -8,7 +8,7 @@ public final class Messages {
             public static final String clientStartSuccess = "Started Client";
             public static final String sudoClientStartSuccess = "Started SudoClient";
             public static final String connectionKillSuccess = "Connection killed";
-            public static final String addedFileSuccessfully = "Added file with tag \"%s\" to Server database";
+            public static final String pushedFileSuccessfully = "Added file with tag \"%s\" to Server database";
             public static final String removedFileSuccessfully = "Removed file with tag \"%s\" from Server database";
             public static final String pulledFileSuccessfully = "Successfully pulled file \"%s\" from server to path \"%s\"";
         }
@@ -26,9 +26,11 @@ public final class Messages {
             public static final String unspecifiedFileToRemove = unspecifiedFile + "to remove";
 
             public static final String writeToFileFailed = "Failed to write file";
+            public static final String noFileWithTag = "File with tag \"%s\" not found";
             public static final String noFileAtPath = "No file with path \"%s\" found";
             public static final String fileAlreadyExistsAtPath = "File already exists at path \"%s\"";
             public static final String failedToCreateNewFileAtPath = "Failed to create new file at path \"%s\"";
+            public static final String byteReadLengthFailure = "The number of bytes read differed from the length of the file";
         }
 
         public static final class Statuses {
@@ -67,8 +69,6 @@ public final class Messages {
             public static final String listFiles = "list";
             public static final String readFile = "read";
             public static final String pushFile = "push";
-            public static final String pushLoop = "pushL";
-            public static final String pushComplete = "pushC";
             public static final String pullFile = "pull";
             public static final String removeFile = "remove";
             public static final String exitClient = "exit";

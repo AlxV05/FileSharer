@@ -93,7 +93,7 @@ public class ServerHandler {
                         killConnection();
                         break;
                     } else {
-                        System.out.printf(sendCommand(line));
+                        System.out.println(sendCommand(line));
                     }
                 } catch (IOException e) {
                     System.out.println(Failures.lineReadFailure);

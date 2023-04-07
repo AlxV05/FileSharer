@@ -2,12 +2,13 @@ package main.java;
 
 import java.io.*;
 import java.net.Socket;
-import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
+import java.util.Arrays;
 import java.util.Objects;
 
+import static main.java.Messages.CLIInput.ArgumentPlaceholders;
+import static main.java.Messages.CLIInput.Commands;
 import static main.java.Messages.CLIOutput.*;
-import static main.java.Messages.CLIInput.*;
 
 public class ServerClient {
     protected Socket clientSocket;
@@ -32,7 +33,7 @@ public class ServerClient {
     }
 
     public String sendCommand(String line) {
-        return handleLine(line) + "%n";
+        return handleLine(line);
     }
 
 
@@ -62,7 +63,7 @@ public class ServerClient {
                         try {
                             String argTag = splitLine[1];
                             serverOutputWriter.println(String.format(ArgumentPlaceholders.doubleArgs, cmd, argTag));
-                            return serverInputReader.readLine();
+                            return String.format(serverInputReader.readLine()); // halp
                         } catch (IndexOutOfBoundsException e) {
                             return Failures.unspecifiedFileToRead;
                         }
@@ -71,15 +72,18 @@ public class ServerClient {
                         try {
                             String argTag = splitLine[1];
                             String argPath = splitLine[2];
-                            BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(argPath)));
-                            String fileLine = reader.readLine();
-                            while (fileLine != null) {
-                                serverOutputWriter.println(String.format(ArgumentPlaceholders.tripleArgs, Commands.pushLoop, argTag, fileLine));
-                                fileLine = reader.readLine();
-                                serverInputReader.readLine();
+                            File file = new File(argPath);
+                            byte[] fileBytes = new byte[(int) file.length()];
+                            try (FileInputStream fileReader = new FileInputStream(file)) {
+                                if (fileReader.read(fileBytes) != fileBytes.length) {
+                                    return Failures.byteReadLengthFailure;
+                                }
                             }
-                            reader.close();
-                            serverOutputWriter.println(String.format(ArgumentPlaceholders.doubleArgs, Commands.pushComplete, argTag));
+                            StringBuilder byteString = new StringBuilder();
+                            for (byte b : fileBytes) {
+                                byteString.append(b).append(",");
+                            }
+                            serverOutputWriter.println(String.format(ArgumentPlaceholders.tripleArgs, Commands.pushFile, argTag, byteString));
                             return serverInputReader.readLine();
                         } catch (NoSuchFileException | FileNotFoundException e) {
                             return String.format(Failures.noFileAtPath, splitLine[2]);
@@ -93,6 +97,12 @@ public class ServerClient {
                             String argPath = splitLine[2];
                             serverOutputWriter.println(String.format(ArgumentPlaceholders.doubleArgs, cmd, argTag));
                             String fileData = serverInputReader.readLine();
+                            String[] x = fileData.split(",");
+                            byte[] y = new byte[x.length];
+                            for (int i = 0; i < x.length; i++) {
+                                y[i] = Byte.parseByte(x[i]);
+                            }
+                            String z = new String(y);
                             File file = new File(argPath);
                             if (!file.createNewFile()) {
                                 if (file.exists()) {
@@ -102,7 +112,7 @@ public class ServerClient {
                                 }
                             }
                             FileWriter clientFileWriter = new FileWriter(file);
-                            clientFileWriter.write(String.format(fileData + "%n"));
+                            clientFileWriter.write(fileData);
                             clientFileWriter.close();
                             return String.format(Successes.pulledFileSuccessfully, argTag, argPath);
                         } catch (IOException e) {
@@ -124,7 +134,7 @@ public class ServerClient {
                         return Helps.fullHelp;
                     }
                     default -> {
-                        serverOutputWriter.println(cmd);
+                        serverOutputWriter.println(line);
                         return serverInputReader.readLine();
                     }
                 }
@@ -146,7 +156,7 @@ public class ServerClient {
                     killConnection();
                     break;
                 } else {
-                    System.out.printf(sendCommand(line));
+                    System.out.println(sendCommand(line));
                 }
             } catch (IOException e) {
                 System.out.println(Failures.lineReadFailure);

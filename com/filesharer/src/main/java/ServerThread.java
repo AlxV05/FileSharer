@@ -1,12 +1,14 @@
 package main.java;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.List;
 import java.util.Objects;
 
-import static main.java.Messages.CLIInput.*;
+import static main.java.Messages.CLIInput.Commands;
 import static main.java.Messages.CLIOutput.*;
 
 public class ServerThread extends Thread{
@@ -48,7 +50,7 @@ public class ServerThread extends Thread{
     }
 
     private String handleLine(String line) {
-        if (Objects.equals(line, null) || line.isBlank()) {
+        if (Objects.equals(line, null) || line.isEmpty() || line.isBlank()) {
             return "";
         } else {
             String[] splitLine = line.split(" ", 3);
@@ -73,19 +75,11 @@ public class ServerThread extends Thread{
                 String argTag = splitLine[1];
                 return dataHandler.readFile(argTag);
             }
-            case Commands.pushLoop -> {
+            case Commands.pushFile -> {
                 String argTag = splitLine[1];
                 String argInfo = splitLine[2];
-                if (dataHandler.containsFile(argTag)) {
-                    dataHandler.appendToFile(argTag, argInfo);
-                } else {
-                    dataHandler.addFile(new FileDataObject(argTag, List.of(argInfo)));
-                }
-                return null;
-            }
-            case Commands.pushComplete -> {
-                String argTag = splitLine[1];
-                return String.format(Successes.addedFileSuccessfully, argTag);
+                dataHandler.addFile(argTag, argInfo);
+                return String.format(Successes.pushedFileSuccessfully, argTag);
             }
             case Commands.removeFile -> {
                 String argTag = splitLine[1];
