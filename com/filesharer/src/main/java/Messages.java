@@ -28,7 +28,7 @@ public final class Messages {
             public static final String writeToFileFailed = "Failed to write file";
             public static final String noFileWithTag = "File with tag \"%s\" not found";
             public static final String noFileAtPath = "No file with path \"%s\" found";
-            public static final String fileAlreadyExistsAtPath = "File already exists at path \"%s\"";
+            public static final String fileAlreadyExistsAtPath = "File \"%s\" already exists at path \"%s\"";
             public static final String failedToCreateNewFileAtPath = "Failed to create new file at path \"%s\"";
             public static final String byteReadLengthFailure = "The number of bytes read differed from the length of the file";
         }

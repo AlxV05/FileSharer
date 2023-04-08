@@ -3,7 +3,6 @@ package main.java;
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.NoSuchFileException;
-import java.util.Arrays;
 import java.util.Objects;
 
 import static main.java.Messages.CLIInput.ArgumentPlaceholders;
@@ -62,8 +61,7 @@ public class ServerClient {
                     case Commands.readFile -> {
                         try {
                             String argTag = splitLine[1];
-                            serverOutputWriter.println(String.format(ArgumentPlaceholders.doubleArgs, cmd, argTag));
-                            return String.format(serverInputReader.readLine()); // halp
+                            return handleRead(argTag);
                         } catch (IndexOutOfBoundsException e) {
                             return Failures.unspecifiedFileToRead;
                         }
@@ -72,21 +70,7 @@ public class ServerClient {
                         try {
                             String argTag = splitLine[1];
                             String argPath = splitLine[2];
-                            File file = new File(argPath);
-                            byte[] fileBytes = new byte[(int) file.length()];
-                            try (FileInputStream fileReader = new FileInputStream(file)) {
-                                if (fileReader.read(fileBytes) != fileBytes.length) {
-                                    return Failures.byteReadLengthFailure;
-                                }
-                            }
-                            StringBuilder byteString = new StringBuilder();
-                            for (byte b : fileBytes) {
-                                byteString.append(b).append(",");
-                            }
-                            serverOutputWriter.println(String.format(ArgumentPlaceholders.tripleArgs, Commands.pushFile, argTag, byteString));
-                            return serverInputReader.readLine();
-                        } catch (NoSuchFileException | FileNotFoundException e) {
-                            return String.format(Failures.noFileAtPath, splitLine[2]);
+                            return handlePush(argTag, argPath);
                         } catch (IndexOutOfBoundsException e) {
                             return Failures.argumentRequirementFailure;
                         }
@@ -95,28 +79,7 @@ public class ServerClient {
                         try {
                             String argTag = splitLine[1];
                             String argPath = splitLine[2];
-                            serverOutputWriter.println(String.format(ArgumentPlaceholders.doubleArgs, cmd, argTag));
-                            String fileData = serverInputReader.readLine();
-                            String[] x = fileData.split(",");
-                            byte[] y = new byte[x.length];
-                            for (int i = 0; i < x.length; i++) {
-                                y[i] = Byte.parseByte(x[i]);
-                            }
-                            String z = new String(y);
-                            File file = new File(argPath);
-                            if (!file.createNewFile()) {
-                                if (file.exists()) {
-                                    return String.format(Failures.fileAlreadyExistsAtPath, argPath);
-                                } else {
-                                    return String.format(Failures.failedToCreateNewFileAtPath, argPath);
-                                }
-                            }
-                            FileWriter clientFileWriter = new FileWriter(file);
-                            clientFileWriter.write(fileData);
-                            clientFileWriter.close();
-                            return String.format(Successes.pulledFileSuccessfully, argTag, argPath);
-                        } catch (IOException e) {
-                            return Failures.writeToFileFailed;
+                            return handlePull(argTag, argPath);
                         } catch (IndexOutOfBoundsException e) {
                             return Failures.argumentRequirementFailure;
                         }
@@ -124,8 +87,7 @@ public class ServerClient {
                     case Commands.removeFile -> {
                         try {
                             String argTag = splitLine[1];
-                            serverOutputWriter.println(String.format(ArgumentPlaceholders.doubleArgs, cmd, argTag));
-                            return serverInputReader.readLine();
+                            return handleRemove(argTag);
                         } catch (IndexOutOfBoundsException e) {
                             return Failures.unspecifiedFileToRemove;
                         }
@@ -143,6 +105,77 @@ public class ServerClient {
                 return null;
             }
         }
+    }
+
+
+    private byte[] convertStringBytesIntoBytes(String[] stringBytes) {
+        byte[] bytes = new byte[stringBytes.length];
+        for (int i = 0; i < stringBytes.length; i++) {
+            if (!stringBytes[i].isBlank() && !stringBytes[i].isEmpty()) {
+                bytes[i] = Byte.parseByte(stringBytes[i]);
+            }
+        }
+        return bytes;
+    }
+
+    private String handleRead(String argTag) throws IOException {
+        serverOutputWriter.println(String.format(ArgumentPlaceholders.doubleArgs, Commands.readFile, argTag));
+        String resultLine = serverInputReader.readLine();
+        if (Objects.equals(resultLine, String.format(Failures.noFileWithTag, argTag))) {
+            return resultLine;
+        } else {
+            return new String(convertStringBytesIntoBytes(resultLine.split(",")));
+        }
+    }
+
+    private String handlePull(String argTag, String argPath) {
+        try {
+            serverOutputWriter.println(String.format(ArgumentPlaceholders.doubleArgs, Commands.pullFile, argTag));
+            String l = serverInputReader.readLine();
+            if (Objects.equals(l, String.format(Failures.noFileWithTag, argTag))) {
+                return l;
+            }
+            String z = new String(convertStringBytesIntoBytes(l.split(",")));
+            File file = new File(argPath);
+            if (!file.createNewFile()) {
+                if (file.exists()) {
+                    return String.format(Failures.fileAlreadyExistsAtPath, argTag, argPath);
+                } else {
+                    return String.format(Failures.failedToCreateNewFileAtPath, argPath);
+                }
+            }
+            FileWriter clientFileWriter = new FileWriter(file);
+            clientFileWriter.write(z);
+            clientFileWriter.close();
+            return String.format(Successes.pulledFileSuccessfully, argTag, argPath);
+        } catch (IOException e) {
+            return Failures.writeToFileFailed;
+        }
+    }
+
+    private String handlePush(String argTag, String argPath) throws IOException {
+        try {
+            File file = new File(argPath);
+            byte[] fileBytes = new byte[(int) file.length()];
+            try (FileInputStream fileReader = new FileInputStream(file)) {
+                if (fileReader.read(fileBytes) != fileBytes.length) {
+                    return Failures.byteReadLengthFailure;
+                }
+            }
+            StringBuilder byteString = new StringBuilder();
+            for (byte b : fileBytes) {
+                byteString.append(b).append(",");
+            }
+            serverOutputWriter.println(String.format(ArgumentPlaceholders.tripleArgs, Commands.pushFile, argTag, byteString));
+            return serverInputReader.readLine();
+        } catch (NoSuchFileException | FileNotFoundException e) {
+            return String.format(Failures.noFileAtPath, argPath);
+        }
+    }
+
+    private String handleRemove(String argTag) throws IOException {
+        serverOutputWriter.println(String.format(ArgumentPlaceholders.doubleArgs, Commands.removeFile, argTag));
+        return serverInputReader.readLine();
     }
 
     public void mainLoop() {
