@@ -181,6 +181,7 @@ public class ServerClient {
     public void mainLoop() {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         System.out.println(Successes.clientStartSuccess);
+        System.out.println(Helps.startingHelp);
         for (;;) {
             System.out.print(prompt);
             try {

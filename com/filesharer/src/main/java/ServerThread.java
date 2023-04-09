@@ -52,13 +52,8 @@ public class ServerThread extends Thread{
     private String handleLine(String line) {
         if (Objects.equals(line, null) || line.isEmpty() || line.isBlank()) {
             return "";
-        } else {
-            String[] splitLine = line.split(" ", 3);
-            return parseLine(splitLine);
         }
-    }
-
-    private String parseLine(String[] splitLine) {
+        String[] splitLine = line.split(" ", 3);
         String cmd = splitLine[0];
         switch (cmd) {
             case Commands.killConnection -> {

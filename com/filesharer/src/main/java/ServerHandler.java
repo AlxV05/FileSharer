@@ -6,8 +6,8 @@ import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.util.Objects;
 
+import static main.java.Messages.CLIInput.Commands;
 import static main.java.Messages.CLIOutput.*;
-import static main.java.Messages.CLIInput.*;
 
 public class ServerHandler {
     protected ServerSocket serverSocket;
@@ -43,7 +43,6 @@ public class ServerHandler {
             try {
                 new ServerThread(serverSocket, dataHandler, serverSocket.accept()).start();
             } catch (IOException ignored) {
-                // Temporary
             }
         }
     }
@@ -84,6 +83,7 @@ public class ServerHandler {
         public void mainLoop() {
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
             System.out.println(Successes.sudoClientStartSuccess);
+            System.out.println(Helps.sudoStartingHelp);
             for (;;) {
                 System.out.print(prompt);
                 try {

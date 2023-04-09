@@ -1,31 +1,34 @@
 package main.java;
 
 import java.util.HashMap;
-import java.util.Map;
 
 import static main.java.Messages.CLIOutput.*;
 
 public class ServerDataHandler {
-    protected final Map<String, FileDataObject> files;
+    protected final HashMap<String, String> files;
 
     public ServerDataHandler() {
         this.files = new HashMap<>();
     }
 
     public String listFiles() {
-        return String.join("%n", files.keySet());
+        if (files.isEmpty()) {
+            return Statuses.noFilesInDatabase;
+        } else {
+            return String.join("%n", files.keySet());
+        }
     }
 
     public synchronized String readFile(String fileTag) {
         if (files.containsKey(fileTag)) {
-            return files.get(fileTag).fileData();
+            return files.get(fileTag);
         } else {
             return String.format(Failures.noFileWithTag, fileTag);
         }
     }
 
     public synchronized void addFile(String fileTag, String fileBytes) {
-        files.put(fileTag, new FileDataObject(fileTag, fileBytes));
+        files.put(fileTag, fileBytes);
     }
 
     public synchronized void removeFile(String fileTag) {

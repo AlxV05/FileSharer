@@ -39,9 +39,18 @@ public final class Messages {
             public static final String closingSudoClient = "Closing SudoClient";
             public static final String closingClient = "Closing Client";
             public static final String alreadyConnected = "Already connected";
+            public static final String noFilesInDatabase = "No files currently stored in Server Database";
         }
 
         public static final class Helps {
+            public static final String startingHelp = """
+                     ===Welcome===
+                     Welcome to FileSharer V.1.0.
+                     To display the Help Page, type "help".""";
+            public static final String sudoStartingHelp = startingHelp + """
+                    SUDO MODE ACTIVATED:
+                    You are currently hosting a server on your machine.
+                    The "exit" and "kill" commands will close both your client and the server.""";
             public static final String fullHelp = """
                     ===Help Page===
                     Client Commands:
