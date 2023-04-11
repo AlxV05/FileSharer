@@ -1,14 +1,15 @@
 package main.java;
 
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
-import static main.java.Messages.CLIOutput.*;
+import static main.java.Messages.CLIOutput.Failures;
+import static main.java.Messages.CLIOutput.Statuses;
 
 public class ServerDataHandler {
-    protected final HashMap<String, String> files;
+    protected final ConcurrentHashMap<String, String> files;
 
     public ServerDataHandler() {
-        this.files = new HashMap<>();
+        this.files = new ConcurrentHashMap<>();
     }
 
     public String listFiles() {
@@ -19,7 +20,7 @@ public class ServerDataHandler {
         }
     }
 
-    public synchronized String readFile(String fileTag) {
+    public String readFile(String fileTag) {
         if (files.containsKey(fileTag)) {
             return files.get(fileTag);
         } else {
@@ -27,11 +28,11 @@ public class ServerDataHandler {
         }
     }
 
-    public synchronized void addFile(String fileTag, String fileBytes) {
+    public void addFile(String fileTag, String fileBytes) {
         files.put(fileTag, fileBytes);
     }
 
-    public synchronized void removeFile(String fileTag) {
+    public void removeFile(String fileTag) {
         files.remove(fileTag);
     }
 }
