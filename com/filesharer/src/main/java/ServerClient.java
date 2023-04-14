@@ -135,7 +135,6 @@ public class ServerClient {
             if (Objects.equals(l, String.format(Failures.noFileWithTag, argTag))) {
                 return l;
             }
-            String z = new String(convertStringBytesIntoBytes(l.split(",")));
             File file = new File(argPath);
             if (!file.createNewFile()) {
                 if (file.exists()) {
@@ -144,8 +143,10 @@ public class ServerClient {
                     return String.format(Failures.failedToCreateNewFileAtPath, argPath);
                 }
             }
-            FileWriter clientFileWriter = new FileWriter(file);
-            clientFileWriter.write(z);
+            FileOutputStream clientFileWriter = new FileOutputStream(file);
+            for (String s : l.split(",")) {
+                clientFileWriter.write(Byte.parseByte(s));
+            }
             clientFileWriter.close();
             return String.format(Successes.pulledFileSuccessfully, argTag, argPath);
         } catch (IOException e) {
